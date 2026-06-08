@@ -1,0 +1,30 @@
+OLARU ELENA-LUIZA
+322CC
+
+Pentru realizarea temei m am folosit de scheletul laboratorului 4, cat si de rezolvarile din cadrul laboratorului, 
+mai ales pentru procesarea pachetelor Ethernet si IPv4, verificarea checksum ului, decrementarea TTL ului si trimiterea pachetelor.
+
+------------------------------------------------------------TASK 1--------------------------------------------------------------------------------
+
+Pentru aceasta cerinta am implementat forwadarea IPv4. La primirea unui pachet, verific prima data daca este IPv4
+si daca checksum ul este valid. Dupa caut ruta cea mai buna pentru destinatie, verific TTL pe care il decrementez ulterior si refac checksum ul.
+Pentru a afla adresa MAC  a next hop ului, folosesc tabela ARP si completez headerul Ethernet si trimit pachetul.
+	In screenshot ul subiect1.png se vede ping ul trimis de pe h-1 catre 192.168.0.2, iar in terminal apare ca raspunsul e primit corect. 
+In Wireshark vedem pachetele ARP si pachetele ICMP Echo Request si Echo Reply, iar TTL ul scade de la 64 la 63, adica pachetul 
+a fost forwadat corect.
+
+------------------------------------------------------------TASK 2---------------------------------------------------------------------------------
+
+Pentru aceasta cerinta am inlocuit cautarea liniara pentru cea mai buna ruta folosind un trie. Fiecare ruta este inserata in trie in functie de prefix si de lungimea mastii (pentru asta am folosit functiile add_route si build_trie). Lungimea prefixului o determin cu get_mask_len si ruta e adaugata in trie mergand fie pe ramura stanga, fie pe cea dreapta in functie de bitii din prefix. In functia best_route fac cautarea si pornesc de la radacina si calculez bitii adresei IP destinatie de la stanga la dreapta. Pastrez ultima ruta valida pe care o gasesc ca sa am la final cea mai lunga potrivire cu prefixul.
+
+
+------------------------------------------------------------TASK 3------------------------------------------------------------------------------
+
+Pentru aceasta cerinta am implementat ARP dinamic, ca router ul sa nu mai depinda de tabela statica. Daca router ul nu gaseste in tabela ARP intrare pentru next hop, pune pachetul in coada si trimite ARP Request. Cand primeste ARP Reply el salveaza asocierea IP cu MAC in tabela si trimite pachetele care asteptau raspunsul. 
+	In screenshot ul subiect3.png apar pachetele ARP request si reply inainte de ICMP care sunt folosite sa aflam aresele MAC. Dupa ce obtinem adresele, pachetul e forwadat corect si primim raspuns pentru ping, adica ARP este dinamic si intrarile sunt pastrate ca sa fie refolosite.
+
+
+------------------------------------------------------------TASK 4------------------------------------------------------------------------------
+
+Pentru aceasta cerinta am implementat in router functionalilatea pentru protocolul ICMP. Daca pachetul e trimis catre router si e unul Echo Request, router ul raspunve su Echo Reply. Daca nu mai exista o ruta pentru destinatie sau TTL ul este 0, router ul trimite un mesaj ICMP. 
+	In screenshot ul subiect4.png exista un ping -t 1, pachetul trimis cu TTL 1. In Wireshark apare pachetul ICMP Echo Request si dupa apare raspunsul ICMP Time to live exceeded pe care il trimite router ul. Apare acest mesaj si in terminal, deci e tratat corect cazul in care TTL expira.
