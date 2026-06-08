@@ -1,30 +1,26 @@
-OLARU ELENA-LUIZA
-322CC
 
-Pentru realizarea temei m am folosit de scheletul laboratorului 4, cat si de rezolvarile din cadrul laboratorului, 
-mai ales pentru procesarea pachetelor Ethernet si IPv4, verificarea checksum ului, decrementarea TTL ului si trimiterea pachetelor.
+This project implements the dataplane of an IPv4 router. It focuses on Ethernet and IPv4 packet processing, checksum verification, TTL handling, ARP, routing table lookup, and ICMP message generation.
 
-------------------------------------------------------------TASK 1--------------------------------------------------------------------------------
+IPv4 Forwarding
 
-Pentru aceasta cerinta am implementat forwadarea IPv4. La primirea unui pachet, verific prima data daca este IPv4
-si daca checksum ul este valid. Dupa caut ruta cea mai buna pentru destinatie, verific TTL pe care il decrementez ulterior si refac checksum ul.
-Pentru a afla adresa MAC  a next hop ului, folosesc tabela ARP si completez headerul Ethernet si trimit pachetul.
-	In screenshot ul subiect1.png se vede ping ul trimis de pe h-1 catre 192.168.0.2, iar in terminal apare ca raspunsul e primit corect. 
-In Wireshark vedem pachetele ARP si pachetele ICMP Echo Request si Echo Reply, iar TTL ul scade de la 64 la 63, adica pachetul 
-a fost forwadat corect.
+When a packet is received, the router first checks if it is an IPv4 packet and verifies that the checksum is valid. Then, it searches for the best route to the destination, checks and decrements the TTL, and recomputes the checksum.
+To determine the MAC address of the next hop, the router uses the ARP table. After updating the Ethernet header with the correct source and destination MAC addresses, the packet is forwarded.
+In the `subiect1.png` screenshot, a ping is sent from `h-1` to `192.168.0.2`, and the terminal shows that the reply is received correctly. In Wireshark, the ARP packets, ICMP Echo Request, and ICMP Echo Reply packets can be seen. The TTL decreases from 64 to 63, which shows that the packet was forwarded correctly.
 
-------------------------------------------------------------TASK 2---------------------------------------------------------------------------------
+Longest Prefix Match
 
-Pentru aceasta cerinta am inlocuit cautarea liniara pentru cea mai buna ruta folosind un trie. Fiecare ruta este inserata in trie in functie de prefix si de lungimea mastii (pentru asta am folosit functiile add_route si build_trie). Lungimea prefixului o determin cu get_mask_len si ruta e adaugata in trie mergand fie pe ramura stanga, fie pe cea dreapta in functie de bitii din prefix. In functia best_route fac cautarea si pornesc de la radacina si calculez bitii adresei IP destinatie de la stanga la dreapta. Pastrez ultima ruta valida pe care o gasesc ca sa am la final cea mai lunga potrivire cu prefixul.
+This part improves the route lookup by replacing the linear search with a trie-based implementation. Each route is inserted into the trie based on its prefix and mask length, using the `add_route` and `build_trie` functions.
+The prefix length is computed using `get_mask_len`, and each route is added to the trie by moving either to the left or to the right branch, depending on the bits of the prefix. In the `best_route` function, the search starts from the root, and the bits of the destination IP address are processed from left to right.
+During the search, the last valid route found is saved, so the router obtains the longest prefix match for the destination address.
 
+Dynamic ARP
 
-------------------------------------------------------------TASK 3------------------------------------------------------------------------------
+This part implements dynamic ARP, so the router does not depend only on a static ARP table. If the router does not find an ARP entry for the next hop, the packet is placed in a queue and an ARP Request is sent.
+When an ARP Reply is received, the router stores the IP-to-MAC association in the ARP table and sends the packets that were waiting for that address.
+In the `subiect3.png` screenshot, the ARP Request and ARP Reply packets appear before the ICMP packets. These packets are used to discover the required MAC addresses. After the addresses are obtained, the packet is forwarded correctly and the ping reply is received.
 
-Pentru aceasta cerinta am implementat ARP dinamic, ca router ul sa nu mai depinda de tabela statica. Daca router ul nu gaseste in tabela ARP intrare pentru next hop, pune pachetul in coada si trimite ARP Request. Cand primeste ARP Reply el salveaza asocierea IP cu MAC in tabela si trimite pachetele care asteptau raspunsul. 
-	In screenshot ul subiect3.png apar pachetele ARP request si reply inainte de ICMP care sunt folosite sa aflam aresele MAC. Dupa ce obtinem adresele, pachetul e forwadat corect si primim raspuns pentru ping, adica ARP este dinamic si intrarile sunt pastrate ca sa fie refolosite.
+ICMP
 
-
-------------------------------------------------------------TASK 4------------------------------------------------------------------------------
-
-Pentru aceasta cerinta am implementat in router functionalilatea pentru protocolul ICMP. Daca pachetul e trimis catre router si e unul Echo Request, router ul raspunve su Echo Reply. Daca nu mai exista o ruta pentru destinatie sau TTL ul este 0, router ul trimite un mesaj ICMP. 
-	In screenshot ul subiect4.png exista un ping -t 1, pachetul trimis cu TTL 1. In Wireshark apare pachetul ICMP Echo Request si dupa apare raspunsul ICMP Time to live exceeded pe care il trimite router ul. Apare acest mesaj si in terminal, deci e tratat corect cazul in care TTL expira.
+This part implements ICMP functionality in the router. If a packet is sent directly to the router and it is an Echo Request, the router replies with an Echo Reply.
+If there is no available route to the destination, or if the TTL expires, the router sends the corresponding ICMP error message.
+In the `subiect4.png` screenshot, the command `ping -t 1` is used, meaning that the packet is sent with TTL 1. In Wireshark, the ICMP Echo Request can be seen, followed by the ICMP Time Exceeded message sent by the router. The same message also appears in the terminal, showing that the TTL expiration case is handled correctly.
